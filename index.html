@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AJS Suite</title>
+    <link rel="icon" href="adilogo.png" type="image/png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        /* ── RESET & BASE ── */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            user-select: none;
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* ── THEME VARIABLES ── */
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #1a1a1a;
+            --bg-panel: #252525;
+            --bg-card: #252525;
+            --bg-card-hover: #2d2d2d;
+            --text-primary: #d4d4d4;
+            --text-secondary: #b0b0b0;
+            --text-muted: #7a7a7a;
+            --border-color: #2d2d2d;
+            --hover-bg: #2d2d2d;
+            --accent: #ff6600;
+            --shadow: none;
+            --tag-bg: #1e1e1e;
+            --tag-border: #3a3a3a;
+            --status-bg: #1a1a1a;
+            --cert-bg: #111;
+            --window-border: #2d2d2d;
+        }
+
+        .light-mode {
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ebebeb;
+            --bg-panel: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f0f0f0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #333333;
+            --text-muted: #666666;
+            --border-color: #cccccc;
+            --hover-bg: #e0e0e0;
+            --accent: #ff6600;
+            --tag-bg: #ffffff;
+            --tag-border: #cccccc;
+            --status-bg: #ebebeb;
+            --cert-bg: #fafafa;
+            --window-border: #cccccc;
+        }
+
+        body {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* ── MAIN WINDOW ── */
+        .burp-window {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            background: var(--bg-primary);
+            border: 1px solid var(--window-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ── TITLE BAR ── */
+        .title-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-primary);
+            padding: 4px 12px 4px 10px;
+            border-bottom: 1px solid var(--border-color);
+            height: 42px;
+            flex-shrink: 0;
+            cursor: default;
+        }
+        .title-logo {
+    width: 40px; /* Makes it very tiny */
+    height: 40px;
+    object-fit: contain; /* Ensures the image doesn't stretch */
+    flex-shrink: 0;
+    border-radius: 4px; /* Optional: adds slightly rounded corners to the image */
+}
+        .title-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .burp-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 3px;
+            font-weight: 700;
+            font-size: 14px;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0;
+        }
+        .burp-icon span {
+            transform: scaleX(-1);
+            display: inline-block;
+        }
+        .title-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: 0.2px;
+        }
+        .title-text .highlight {
+            color: var(--accent);
+        }
+        .window-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .window-controls button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 15px;
+            width: 30px;
+            height: 26px;
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+            font-family: 'Inter', sans-serif;
+        }
+        .window-controls button:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        .window-controls .close-btn:hover {
+            background: #e81123;
+            color: #fff;
+        }
+        #themeToggle {
+            font-size: 18px;
+            padding: 0 10px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+        #themeToggle:hover {
+            color: var(--accent);
+        }
+
+        /* ── TAB BAR ── */
+        .tab-bar {
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            padding: 0 6px;
+            border-bottom: 1px solid var(--border-color);
+            height: 40px;
+            flex-shrink: 0;
+            gap: 0;
+        }
+        .tab-item {
+            padding: 4px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.2px;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: transparent;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+        }
+        .tab-item:hover {
+            color: var(--text-primary);
+        }
+        .tab-item.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* ── MAIN CONTENT ── */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-primary);
+            position: relative;
+        }
+
+        /* ── TAB PANELS ── */
+        .tab-panel {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+            padding: 0;
+            background: var(--bg-primary);
+            flex-direction: column;
+        }
+        .tab-panel.active {
+            display: flex;
+        }
+
+        /* ── PANEL INNER ── */
+        .panel-inner {
+            flex: 1;
+            overflow: auto;
+            padding: 20px 24px;
+            background: var(--bg-primary);
+        }
+
+        /* ── SUMMARY ── */
+        .summary-wrapper {
+            display: flex;
+            gap: 30px;
+            height: 100%;
+            min-height: 0;
+            align-items: stretch;
+        }
+        .summary-text {
+            flex: 1;
+            min-width: 0;
+            padding-top: 8px;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+        .summary-text .greeting {
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 16px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .summary-text p {
+            font-size: 17px;
+            line-height: 1.9;
+            color: var(--text-secondary);
+            font-weight: 400;
+            letter-spacing: 0.2px;
+        }
+        .summary-ascii {
+            flex: 0 0 55%;
+            min-width: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+        }
+        .summary-ascii pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px;
+            line-height: 1.15;
+            color: var(--accent);
+            white-space: pre;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            text-align: left;
+            letter-spacing: 0px;
+            background: transparent;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .summary-ascii pre .ascii-content {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            white-space: pre;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8px;
+            line-height: 1.15;
+            color: var(--accent);
+            padding: 4px;
+            overflow: visible;
+        }
+
+        /* ── GLITCH OVERLAY ── */
+        .glitch-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            background: transparent;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+        .glitch-overlay.active {
+            opacity: 1;
+        }
+        .glitch-overlay .scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg,
+                    transparent 0px,
+                    transparent 3px,
+                    rgba(0, 0, 0, 0.15) 3px,
+                    rgba(0, 0, 0, 0.15) 4px);
+            pointer-events: none;
+            animation: scanlines 0.1s infinite linear;
+        }
+        .glitch-overlay .flicker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0);
+            pointer-events: none;
+            animation: flicker 0.15s infinite alternate;
+        }
+        .glitch-overlay .noise {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            pointer-events: none;
+            opacity: 0;
+            animation: noiseFlash 0.08s infinite;
+        }
+        .glitch-overlay .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.4) 100%);
+            pointer-events: none;
+        }
+        @keyframes scanlines {
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 0 4px;
+            }
+        }
+        @keyframes flicker {
+            0% {
+                background: rgba(0, 0, 0, 0);
+            }
+            95% {
+                background: rgba(0, 0, 0, 0);
+            }
+            96% {
+                background: rgba(255, 255, 255, 0.03);
+            }
+            97% {
+                background: rgba(0, 0, 0, 0);
+            }
+            98% {
+                background: rgba(255, 255, 255, 0.02);
+            }
+            100% {
+                background: rgba(0, 0, 0, 0);
+            }
+        }
+        @keyframes noiseFlash {
+            0% {
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.3;
+            }
+            20% {
+                opacity: 0.1;
+            }
+            30% {
+                opacity: 0.5;
+            }
+            40% {
+                opacity: 0.05;
+            }
+            50% {
+                opacity: 0.2;
+            }
+            60% {
+                opacity: 0.4;
+            }
+            70% {
+                opacity: 0.05;
+            }
+            80% {
+                opacity: 0.3;
+            }
+            90% {
+                opacity: 0.1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* ── GLITCH CHAR DISTORTION ── */
+        .glitch-distort {
+            animation: glitchText 0.1s infinite;
+        }
+        @keyframes glitchText {
+            0% {
+                transform: translate(0, 0) skew(0deg);
+            }
+            10% {
+                transform: translate(-1px, 1px) skew(0.5deg);
+            }
+            20% {
+                transform: translate(1px, -1px) skew(-0.3deg);
+            }
+            30% {
+                transform: translate(-2px, 0) skew(0.8deg);
+            }
+            40% {
+                transform: translate(2px, 2px) skew(-0.5deg);
+            }
+            50% {
+                transform: translate(-1px, -1px) skew(0.2deg);
+            }
+            60% {
+                transform: translate(1px, 0) skew(-0.7deg);
+            }
+            70% {
+                transform: translate(-2px, 2px) skew(0.4deg);
+            }
+            80% {
+                transform: translate(2px, -1px) skew(-0.2deg);
+            }
+            90% {
+                transform: translate(-1px, 1px) skew(0.6deg);
+            }
+            100% {
+                transform: translate(0, 0) skew(0deg);
+            }
+        }
+
+        /* ── EDUCATION ── */
+        .edu-card {
+            background: var(--bg-panel);
+            border-left: 4px solid var(--accent);
+            padding: 20px 24px;
+            margin-bottom: 14px;
+            border-radius: 0;
+            border: 1px solid var(--border-color);
+            border-left-width: 4px;
+        }
+        .edu-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .edu-card .sub {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+        .edu-card .detail {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 400;
+        }
+        .edu-card .detail span {
+            color: var(--accent);
+        }
+
+        /* ── SKILLS ── */
+        .skills-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding-top: 4px;
+        }
+        .skill-group {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            padding: 14px 18px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            line-height: 2.2;
+        }
+        .skill-group .label {
+            color: var(--accent);
+            font-weight: 600;
+            display: inline-block;
+            min-width: 140px;
+            letter-spacing: 0.3px;
+        }
+        .skill-group .value {
+            color: var(--text-secondary);
+            word-break: break-word;
+        }
+        .skill-group .value .tag {
+            display: inline-block;
+            background: var(--tag-bg);
+            padding: 0 12px;
+            margin: 2px 4px 2px 0;
+            border-radius: 2px;
+            color: var(--text-primary);
+            font-size: 14px;
+            border: 1px solid var(--tag-border);
+            transition: all 0.2s ease;
+            cursor: default;
+        }
+        .skill-group .value .tag:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+        }
+
+        /* ── EXPERIENCE FLIP CARDS ── */
+        .exp-grid {
+            display: grid;
+            /* Increased min-width for bigger cards */
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            padding: 4px 0;
+        }
+        .exp-flip-card {
+            background: transparent;
+            perspective: 1000px;
+            /* Increased height */
+            height: 280px; 
+            cursor: default;
+        }
+        .exp-flip-card .flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+        }
+        .exp-flip-card:hover .flip-inner {
+            -webkit-transform: rotateY(180deg);
+            transform: rotateY(180deg);
+        }
+        .exp-flip-card .flip-front,
+        .exp-flip-card .flip-back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            padding: 24px 28px; /* Slightly increased padding for larger card */
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .exp-flip-card .flip-front {
+            /* z-index REMOVED - this was causing the overlap bug */
+            background: var(--bg-card);
+        }
+        .exp-flip-card .flip-front .exp-role {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .exp-flip-card .flip-front .exp-org {
+            font-size: 16px;
+            color: var(--accent);
+            font-weight: 400;
+            margin-top: 2px;
+        }
+        .exp-flip-card .flip-front .exp-date {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 6px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 6px;
+        }
+        .exp-flip-card .flip-back {
+            -webkit-transform: rotateY(180deg);
+            transform: rotateY(180deg);
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+            justify-content: center;
+            align-items: flex-start;
+            /* z-index REMOVED */
+        }
+        .exp-flip-card .flip-back ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            width: 100%;
+        }
+        .exp-flip-card .flip-back ul li {
+            padding: 2px 0 2px 22px;
+            position: relative;
+        }
+        .exp-flip-card .flip-back ul li::before {
+            content: "▸";
+            color: var(--accent);
+            position: absolute;
+            left: 0;
+            font-size: 14px;
+        }
+        .exp-flip-card .flip-back .highlight {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* ── PROJECTS FLIP CARDS ── */
+        .projects-grid {
+            display: grid;
+            /* Increased min-width for bigger cards */
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+            padding: 4px 0;
+        }
+        .flip-card {
+            background: transparent;
+            perspective: 1000px;
+            /* Increased height */
+            height: 320px; 
+            cursor: default;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            -webkit-transform: rotateY(180deg);
+            transform: rotateY(180deg);
+        }
+        .flip-card-front,
+        .flip-card-back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            padding: 24px 28px; /* Slightly increased padding */
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .flip-card-front {
+            /* z-index REMOVED - this was causing the overlap bug */
+            background: var(--bg-card);
+        }
+        .flip-card-front h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .flip-card-front .tech {
+            font-size: 14px;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 8px;
+            font-weight: 400;
+        }
+        .flip-card-front .desc {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            flex: 1;
+        }
+        .flip-card-front .flip-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            border-top: 1px solid var(--border-color);
+            padding-top: 6px;
+        }
+        .flip-card-back {
+            -webkit-transform: rotateY(180deg);
+            transform: rotateY(180deg);
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+            justify-content: center;
+            /* z-index REMOVED */
+        }
+        .flip-card-back h5 {
+            font-size: 15px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+        .flip-card-back ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 14.5px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        .flip-card-back ul li {
+            padding: 2px 0 2px 22px;
+            position: relative;
+        }
+        .flip-card-back ul li::before {
+            content: "▸";
+            color: var(--accent);
+            position: absolute;
+            left: 0;
+            font-size: 13px;
+        }
+        .flip-card-back .tech-stack {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            border-top: 1px solid var(--border-color);
+            padding-top: 8px;
+        }
+        .flip-card-back .tech-stack span {
+            color: var(--accent);
+        }
+        
+        /* ── PROJECT GITHUB LINK ── */
+        .project-github-link {
+            display: inline-block;
+            margin-top: 16px;
+            color: var(--text-primary);
+            transition: color 0.2s ease, transform 0.2s ease;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+        .project-github-link:hover {
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* ── CERTIFICATIONS ── */
+        .cert-list {
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+        .cert-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 22px; /* Slightly increased padding */
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s;
+            gap: 16px;
+        }
+        .cert-item:last-child {
+            border-bottom: none;
+        }
+        .cert-item:hover {
+            background: var(--hover-bg);
+        }
+        .cert-item .cert-icon {
+            color: var(--accent);
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            width: 28px;
+            text-align: center;
+        }
+        .cert-item .cert-name {
+            flex: 1;
+            font-size: 16px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .cert-item .cert-name .sub {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-left: 8px;
+        }
+        .cert-item .cert-date {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .cert-item .cert-arrow {
+            color: var(--text-muted);
+            font-size: 16px;
+            transition: transform 0.2s, color 0.2s;
+        }
+        .cert-item:hover .cert-arrow {
+            color: var(--accent);
+            transform: translateX(3px);
+        }
+
+        /* ── CERTIFICATIONS ── */
+        .cert-list {
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+        .cert-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s;
+            gap: 16px;
+        }
+        .cert-item:last-child {
+            border-bottom: none;
+        }
+        .cert-item:hover {
+            background: var(--hover-bg);
+        }
+        .cert-item .cert-icon {
+            color: var(--accent);
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            width: 28px;
+            text-align: center;
+        }
+        .cert-item .cert-name {
+            flex: 1;
+            font-size: 16px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .cert-item .cert-name .sub {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-left: 8px;
+        }
+        .cert-item .cert-date {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .cert-item .cert-arrow {
+            color: var(--text-muted);
+            font-size: 16px;
+            transition: transform 0.2s, color 0.2s;
+        }
+        .cert-item:hover .cert-arrow {
+            color: var(--accent);
+            transform: translateX(3px);
+        }
+
+        /* ── CERTIFICATE INSPECTOR ── */
+        .cert-inspector {
+            display: none;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 18px 24px;
+            flex-shrink: 0;
+            max-height: 360px;
+            overflow: auto;
+            animation: slideUp 0.25s ease;
+        }
+        .cert-inspector.open {
+            display: block;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .cert-inspector .inspector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+        .cert-inspector .inspector-header h4 {
+            font-size: 17px;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        .cert-inspector .inspector-header .close-inspector {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 6px;
+            transition: color 0.15s;
+            font-family: 'Inter', sans-serif;
+        }
+        .cert-inspector .inspector-header .close-inspector:hover {
+            color: var(--text-primary);
+        }
+        .cert-inspector .inspector-body {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        .cert-inspector .inspector-body .cert-detail-row {
+            display: flex;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .cert-inspector .inspector-body .cert-detail-row .label {
+            min-width: 130px;
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 14px;
+        }
+        .cert-inspector .inspector-body .cert-detail-row .value {
+            color: var(--text-primary);
+            font-weight: 400;
+            font-size: 15px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .cert-inspector .inspector-body .cert-detail-row .value .orange {
+            color: var(--accent);
+        }
+        .cert-inspector .inspector-body .cert-full {
+            background: var(--cert-bg);
+            padding: 16px 18px;
+            margin-top: 12px;
+            border: 1px solid var(--border-color);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* ── STATUS BAR ── */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--status-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 2px 18px;
+            height: 36px;
+            flex-shrink: 0;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .status-bar .status-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .status-bar .status-left .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4caf50;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        .status-bar .status-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .status-bar .status-right a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.15s;
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .status-bar .status-right a:hover {
+            color: var(--accent);
+        }
+        .status-bar .status-right .sep {
+            color: var(--border-color);
+        }
+        .status-bar .status-right .contact-item {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        .status-bar .status-right .contact-item .hl {
+            color: var(--accent);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+            .summary-ascii {
+                flex: 0 0 45%;
+            }
+            .summary-ascii pre {
+                font-size: 6.5px;
+            }
+            .summary-ascii pre .ascii-content {
+                font-size: 6.5px;
+            }
+        }
+        @media (max-width: 768px) {
+            .tab-item {
+                padding: 4px 14px;
+                font-size: 13px;
+            }
+            .projects-grid,
+            .exp-grid {
+                grid-template-columns: 1fr;
+            }
+            .status-bar {
+                font-size: 12px;
+                padding: 2px 12px;
+                flex-wrap: wrap;
+                height: auto;
+                min-height: 36px;
+                gap: 4px;
+            }
+            .status-bar .status-right {
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            .panel-inner {
+                padding: 14px 16px;
+            }
+            .skill-group .label {
+                min-width: 80px;
+                font-size: 14px;
+            }
+            .exp-flip-card {
+                height: 200px;
+            }
+            .flip-card {
+                height: 240px;
+            }
+            .summary-wrapper {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .summary-ascii {
+                flex: 0 0 auto;
+                height: 280px;
+                width: 100%;
+            }
+            .summary-ascii pre {
+                font-size: 6px;
+            }
+            .summary-ascii pre .ascii-content {
+                font-size: 6px;
+            }
+            .summary-text p {
+                font-size: 15px;
+            }
+        }
+        @media (max-width: 480px) {
+            .title-text {
+                font-size: 13px;
+            }
+            .tab-item {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+            .window-controls button {
+                width: 26px;
+                font-size: 13px;
+            }
+            .burp-icon {
+                width: 20px;
+                height: 20px;
+                font-size: 11px;
+            }
+            #themeToggle {
+                font-size: 16px;
+            }
+            .summary-ascii pre {
+                font-size: 4.5px;
+            }
+            .summary-ascii pre .ascii-content {
+                font-size: 4.5px;
+            }
+            .summary-ascii {
+                height: 200px;
+            }
+        }
+
+        /* ── UTILITY ── */
+        .text-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .text-orange {
+            color: var(--accent);
+        }
+        .border-orange {
+            border-color: var(--accent);
+        }
+        .bg-dark {
+            background: var(--bg-secondary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="burp-window">
+
+        <!-- ═══ TITLE BAR ═══ -->
+        <div class="title-bar">
+            <div class="title-bar-left">
+    <img src="adilogo.png" alt="Logo" class="title-logo" />
+    <span class="title-text">
+        <span class="highlight">Aditya J Shettigar</span>
+    </span>
+</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+                <button id="themeToggle" title="Toggle theme">🌙</button>
+            </div>
+        </div>
+
+        <!-- ═══ TAB BAR ═══ -->
+        <div class="tab-bar" id="mainTabBar">
+            <button class="tab-item active" data-tab="summary">Summary</button>
+            <button class="tab-item" data-tab="education">Education</button>
+            <button class="tab-item" data-tab="skills">Skills</button>
+            <button class="tab-item" data-tab="experience">Experience</button>
+            <button class="tab-item" data-tab="projects">Projects</button>
+            <button class="tab-item" data-tab="certifications">Certifications</button>
+        </div>
+
+        <!-- ═══ CONTENT AREA ═══ -->
+        <div class="content-area">
+
+            <!-- ─── SUMMARY ─── -->
+            <div class="tab-panel active" id="panel-summary">
+                <div class="panel-inner" style="display:flex;flex-direction:column;padding-bottom:0;overflow:hidden;">
+                    <div class="summary-wrapper">
+                        <div class="summary-text">
+                            <div class="greeting">$ whoami</div>
+                            <p>
+                                Enthusiastic and hardworking Computer Science graduate student interested in
+                                Cybersecurity, DevOps, and threat intelligence, currently pursuing an Integrated
+                                M.Tech in Computer Science at VIT-AP. Proven ability to manage concurrent
+                                academic programs while maintaining strong organizational and time management
+                                skills. Dedicated to continuous learning, collaborative problem-solving, and
+                                building resilient, privacy-preserving digital infrastructure.
+                            </p>
+                        </div>
+                        <div class="summary-ascii" id="asciiContainer">
+                            <pre id="asciiDisplay"><span class="ascii-content" id="asciiContent"></span></pre>
+                            <div class="glitch-overlay" id="glitchOverlay">
+                                <div class="scanline"></div>
+                                <div class="flicker"></div>
+                                <div class="vignette"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── EDUCATION ─── -->
+            <div class="tab-panel" id="panel-education">
+                <div class="panel-inner">
+                    <div class="edu-card">
+                        <h3>Vellore Institute of Technology, Amaravati</h3>
+                        <div class="sub">Integrated M.Tech in Computer Science</div>
+                        <div class="detail">Expected <span>2028</span> &nbsp;·&nbsp; CGPA: <span>8.66 / 10.0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── SKILLS ─── -->
+            <div class="tab-panel" id="panel-skills">
+                <div class="panel-inner">
+                    <div class="skills-container">
+                        <div class="skill-group">
+                            <span class="label">Languages</span>
+                            <span class="value">
+                                <span class="tag">Python</span>
+                                <span class="tag">Java</span>
+                                <span class="tag">JavaScript</span>
+                                <span class="tag">TypeScript</span>
+                                <span class="tag">R</span>
+                                <span class="tag">C++</span>
+                                <span class="tag">SQL</span>
+                                <span class="tag">HTML</span>
+                                <span class="tag">CSS</span>
+                            </span>
+                        </div>
+                        <div class="skill-group">
+                            <span class="label">Frameworks &amp; Libs</span>
+                            <span class="value">
+                                <span class="tag">React</span>
+                                <span class="tag">Next.js</span>
+                                <span class="tag">Springboot</span>
+                                <span class="tag">Flask</span>
+                                <span class="tag">Flower (flwr)</span>
+                                <span class="tag">FastAPI</span>
+                                <span class="tag">NumPy</span>
+                                <span class="tag">Pandas</span>
+                                <span class="tag">Matplotlib</span>
+                                <span class="tag">TensorFlow</span>
+                                <span class="tag">PyTorch</span>
+                                <span class="tag">JAX</span>
+                                <span class="tag">Pytest</span>
+                                <span class="tag">Scikit-learn</span>
+                                <span class="tag">Streamlit</span>
+                                <span class="tag">Svelte</span>
+                            </span>
+                        </div>
+                        <div class="skill-group">
+                            <span class="label">Tools &amp; Networking</span>
+                            <span class="value">
+                                <span class="tag">Git</span>
+                                <span class="tag">GitHub</span>
+                                <span class="tag">Docker</span>
+                                <span class="tag">Kubernetes</span>
+                                <span class="tag">Jenkins</span>
+                                <span class="tag">PostgreSQL</span>
+                                <span class="tag">Redis</span>
+                                <span class="tag">Linux</span>
+                                <span class="tag">Suricata</span>
+                                <span class="tag">Zeek</span>
+                                <span class="tag">Metasploit</span>
+                                <span class="tag">Wireshark</span>
+                                <span class="tag">Burp Suite</span>
+                                <span class="tag">Nmap</span>
+                                <span class="tag">Nessus</span>
+                                <span class="tag">LangChain</span>
+                                <span class="tag">Figma</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── EXPERIENCE ─── -->
+            <div class="tab-panel" id="panel-experience">
+                <div class="panel-inner">
+                    <div class="exp-grid">
+                        <div class="exp-flip-card">
+                            <div class="flip-inner">
+                                <div class="flip-front">
+                                    <div class="exp-role">Community Manager</div>
+                                    <div class="exp-org">Null Chapter (Cybersecurity Community)</div>
+                                    <div class="exp-date">2025 – 2026</div>
+                                </div>
+                                <div class="flip-back">
+                                    <ul>
+                                        <li>Managed operations and cybersecurity awareness initiatives for a growing technical community.</li>
+                                        <li>Organized hands-on workshops and competitions to enhance practical network security skills.</li>
+                                        <li><span class="highlight">Led the organization to win the Best Chapter Award for the 2025-26 academic year.</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="exp-flip-card">
+                            <div class="flip-inner">
+                                <div class="flip-front">
+                                    <div class="exp-role">President</div>
+                                    <div class="exp-org">Namma Karunadu Kannada Association</div>
+                                    <div class="exp-date">2024 – 2025</div>
+                                </div>
+                                <div class="flip-back">
+                                    <ul>
+                                        <li>Directed a cross-functional team of student volunteers to coordinate cultural and literary events.</li>
+                                        <li><span class="highlight">Successfully secured the Best Regional Club Award for the 2024-25 academic year.</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── PROJECTS ─── -->
+            <div class="tab-panel" id="panel-projects">
+                <div class="panel-inner">
+                    <div class="projects-grid">
+                        <div class="flip-card">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <h4>Mr. Pattedaara</h4>
+                                    <div class="tech">Next.js 14 · PostgreSQL 16 · Cytoscape.js</div>
+                                    <div class="desc">Cybercrime OSINT Investigation Platform with FIR-linked case records and 4-tier RBAC.</div>
+                                    <div class="flip-hint">↻ hover to flip</div>
+                                </div>
+                                <div class="flip-card-back">
+                                    <h5>▸ Technical Details</h5>
+                                    <ul>
+                                        <li>Maps 3 major social engineering attack categories</li>
+                                        <li>Interactive OSINT graph with 9 entity types</li>
+                                        <li>One-click enrichment via VirusTotal, Shodan, HIBP</li>
+                                        <li>MITRE ATT&amp;CK vector tracing</li>
+                                    </ul>
+                                    <div class="tech-stack"><span>Stack:</span> Next.js 14, PostgreSQL 16, Cytoscape.js, VirusTotal / Shodan APIs</div>
+                                    <!-- GitHub Logo Link added here -->
+                                    <a href="https://github.com/adityajs179/mr.pattedaara" target="_blank" class="project-github-link" title="View Repository">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flip-card">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <h4>UnDDoSed</h4>
+                                    <div class="tech">Python · XGBoost · Flower (flwr) · WebSockets</div>
+                                    <div class="desc">Federated Learning DDoS Detection System with topology-aware aggregation.</div>
+                                    <div class="flip-hint">↻ hover to flip</div>
+                                </div>
+                                <div class="flip-card-back">
+                                    <h5>▸ Technical Details</h5>
+                                    <ul>
+                                        <li>Distributed intrusion detection across ISP nodes</li>
+                                        <li>100% local data privacy (CIC-DDoS2019 dataset)</li>
+                                        <li>Custom XAI micro-latency profiler</li>
+                                        <li>Federated SHAP Consistency Tracker</li>
+                                        <li>Sub-200ms inference times</li>
+                                    </ul>
+                                    <div class="tech-stack"><span>Stack:</span> Python, XGBoost, Flower (flwr), WebSockets, SvelteKit, Docker</div>
+                                    <!-- GitHub Logo Link added here -->
+                                    <a href="https://github.com/adityajshettigar/unddosed" target="_blank" class="project-github-link" title="View Repository">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flip-card">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front">
+                                    <h4>CipherSentinel</h4>
+                                    <div class="tech">React · FastAPI · Celery · Redis · Groq LLM</div>
+                                    <div class="desc">Zero-Trust Post-Quantum Cryptography Scanner with AST parsing.</div>
+                                    <div class="flip-hint">↻ hover to flip</div>
+                                </div>
+                                <div class="flip-card-back">
+                                    <h5>▸ Technical Details</h5>
+                                    <ul>
+                                        <li>Localized Python CLI agent for AST parsing</li>
+                                        <li>Zero proprietary code exfiltration</li>
+                                        <li>NIST FIPS-203 compliant ML-KEM migration roadmaps</li>
+                                        <li>Asynchronous backend for concurrent scanning</li>
+                                    </ul>
+                                    <div class="tech-stack"><span>Stack:</span> React, FastAPI, Celery, Redis, Groq LLM</div>
+                                    <!-- GitHub Logo Link added here -->
+                                    <a href="https://github.com/adityajshettigar/ciphersentinel" target="_blank" class="project-github-link" title="View Repository">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── CERTIFICATIONS ─── -->
+            <div class="tab-panel" id="panel-certifications">
+                <div class="panel-inner" style="display:flex;flex-direction:column;padding-bottom:0;">
+                    <div class="cert-list" id="certList">
+                        <div class="cert-item" data-cert="ibm">
+                            <span class="cert-icon">⬡</span>
+                            <span class="cert-name">IBM - DevOps, Agile and Design Thinking <span class="sub">— CEDVIT1</span></span>
+                            <span class="cert-date">July 2026</span>
+                            <span class="cert-arrow">▸</span>
+                        </div>
+                    </div>
+                    <div class="cert-inspector" id="certInspector">
+                        <div class="inspector-header">
+                            <h4>⬡ Certificate Inspector</h4>
+                            <button class="close-inspector" id="closeInspector">✕</button>
+                        </div>
+                        <div class="inspector-body" id="inspectorBody">
+                            <div class="cert-detail-row">
+                                <span class="label">Name</span>
+                                <span class="value">Aditya J Shettigar</span>
+                            </div>
+                            <div class="cert-detail-row">
+                                <span class="label">Certificate</span>
+                                <span class="value">IBM - DevOps, Agile and Design Thinking <span class="orange">(CEDVIT1)</span></span>
+                            </div>
+                            <div class="cert-detail-row">
+                                <span class="label">Issue Date</span>
+                                <span class="value">July 10, 2026</span>
+                            </div>
+                            <div class="cert-detail-row">
+                                <span class="label">Issued By</span>
+                                <span class="value">IBM Career Education Program</span>
+                            </div>
+                            <div class="cert-detail-row">
+                                <span class="label">Verification</span>
+                                <span class="value" style="font-size:12px;word-break:break-all;">
+                                    <a href="#" style="color:var(--accent);text-decoration:none;font-family:'JetBrains Mono',monospace;">
+                                        https://courses.ibmcep.cognitiveclass.ai/certificates/1bdca4c91e2d4c01a2bc9f374d638152
+                                    </a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ═══ STATUS BAR ═══ -->
+        <div class="status-bar">
+    <div class="status-left">
+        <span style="color:var(--text-muted);">Aditya J Shettigar</span>
+    </div>
+    <div class="status-right">
+        <span class="contact-item">✉ <a href="mailto:adityajs179@gmail.com" class="hl" style="text-decoration: none; color: var(--accent);">Mail</a></span>
+        <span class="sep">|</span>
+        <span class="contact-item">📞 <span class="hl">+91 8861248515</span></span>
+        <span class="sep">|</span>
+        <a href="https://github.com/adityajshettigar" target="_blank">GitHub</a>
+        <span class="sep">|</span>
+        <a href="https://www.linkedin.com/in/aditya-j-shettigar" target="_blank">LinkedIn</a>
+    </div>
+</div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ── THEME TOGGLE ──
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('light-mode');
+                this.textContent = document.body.classList.contains('light-mode') ? '☀️' : '🌙';
+            });
+
+            // ── TAB SWITCHING ──
+            const mainTabs = document.querySelectorAll('#mainTabBar .tab-item');
+            const panels = {
+                summary: document.getElementById('panel-summary'),
+                education: document.getElementById('panel-education'),
+                skills: document.getElementById('panel-skills'),
+                experience: document.getElementById('panel-experience'),
+                projects: document.getElementById('panel-projects'),
+                certifications: document.getElementById('panel-certifications')
+            };
+
+            function activateTab(tabId) {
+                mainTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+                Object.keys(panels).forEach(key => {
+                    panels[key].classList.toggle('active', key === tabId);
+                });
+            }
+
+            mainTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    activateTab(this.dataset.tab);
+                });
+            });
+
+            // ── CERTIFICATIONS ──
+            const certItems = document.querySelectorAll('.cert-item');
+            const inspector = document.getElementById('certInspector');
+            const closeInspectorBtn = document.getElementById('closeInspector');
+
+            function openInspector() {
+                inspector.classList.add('open');
+            }
+
+            function closeInspector() {
+                inspector.classList.remove('open');
+            }
+
+            certItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    openInspector();
+                });
+            });
+
+            closeInspectorBtn.addEventListener('click', closeInspector);
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeInspector();
+                }
+            });
+
+
+
+            // ── Social links ──
+            document.querySelectorAll('.status-right a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('🔗 ' + this.textContent + ' link would open in a real deployment.');
+                });
+            });
+
+            const verifLink = document.querySelector('.cert-detail-row .value a');
+            if (verifLink) {
+                verifLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('🔐 Verification URL: \n' + this.textContent);
+                });
+            }
+
+            // ──────────────────────────────────────────────────────────────
+            // ── ASCII GLITCH ANIMATION ──
+            // ──────────────────────────────────────────────────────────────
+
+            const ascii1 = `                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                              -@%@@@@@@@@@@@@@@@@@@%@%-                                                                             
+                                                                                   +@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+                                                                    
+                                                                             %@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#                                                               
+                                                                         @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%                                                           
+                                                                     %@@@@@@@@@@@@@@@@@@@@@@@%*: .......:...=#%@@@@@@@@@@@@@@@@@@@@@@@@@@@#                                                       
+                                                                 =@@@@@@@@@@@@@@@@@%:.:..................:....::::::..::*@@@@@@@@@@@@@@@@@@@@@                                                    
+                                                               @@@@@@@@@@@@@@@#..............................:......:....:::=@@@@@@@@@@@@@@@@@@@%                                                 
+                                                            +@@@@@@@@@@@@@+..............................................:.:::::#@@@@@@@@@@@@@@@@@@#                                              
+                                                          @@@@@@@@@@@@+.:........................               ............::::::::@@@@@@@@@@@@@@@@@@+                                           
+                                                       =@@@@@@@@@@@+..:::::............                                  .:.:::::::::::+@@@@@@@@@@@@@@@@@                                         
+                                                     @@@@@@@@@@@@.......::::.......                                           .:::::::::::%@@@@@@@@@@@@@@@@=                                      
+                                                   @@@@@@@@@@@=...............                                                    ...::::::::@@@@@@@@@@@@@@@@                                     
+                                                 +@@@@@@@@@@.:.............                                                          .:::::::::*@@@@@@@@@@@@@@#                                   
+                                                @@@@@@@@@+::::.:........                                                                .:::::::::@@@@@@@@@@@@@@:                                 
+                                              :@@@@@@@@#....::::.....                                                                      :::::::--@@@@@@@@@@@@@@                                
+                                             @@@@@@@@@.........:...                                                                           :::-----@@@@@@@@@@@@@-                              
+                                           *@@@@@@@@*:...........                                                                               -------=@@@@@@@@@@@@@                             
+                                          @@@@@@@@@::::........                                                                                   -------@@@@@@@@@@@@@*                           
+                                         @@@@@@@@#:::::......                                                                                       ------#@@@@@@@@@@@@@                          
+                                       +@@@@@@@@::::::.....                                                                                          .-----+@@@@@@@@@%%%%                         
+                                      =@@@@@@@@:::::......                                                                                             :-----@@@@@@@@%%%%%                        
+                                     -@@@@@@@%:::::::...                                                        ==+*##                    ##**#%+        -----@@@@@@@@%%%%%                       
+                                    *@@@@@@@@::::::::..        =@@@@@@@@@@@@@@@**+             ##%%%%%%%%%%%%%%%%%####--:            -#%%%%%%%%%%%%%%%#:  .---=@@@@@@@@#%%%*                      
+                                   -@@@@@@@@::::::::.          #@@@@@@@@@@@@@@*****+-          ######%%%%%%%%%#######+-:::::     *%%%%%%%%#########%%%%%%%%%*:--%@@@@@@@%%%%=                     
+                                  *@@@@@@@@:::::::::          ###%%%%%%%%%%%%%********        .######################-:::::    :%%%%%##################%%%%%%%%%.@@@@@@@@%%%%=                    
+                                  @@@@@@@@:::::::::          =%%%%%%%%%%%%%%%%%****+++         +***+++++#***********   .:::   %%%##########################%%++. .%@@@@@@%%%%%                    
+                                +@@@@@@@@:::::::::           %%%%%%%%%%%%%%%%%%#***+++           +*+*++#####******:         +%%############################*++:.  -@@@%@%@%%%%%                   
+                                @@@@@@@@--:::::::           #%%%%%%%%%%%%%%%%%%%**++++.            ***#####******          #%%###############+###########****+..   +@@%@@@@%%%%#                  
+                               @@@@@@@@---::::::           +%%%%%%%%%%%%%%%%%%%%%*+++++             +#*##*#*****          %%###########=          -####******:..   .#%%%@@@@%%%#*                 
+                              @@@@@@@@+----::::.           %%%%%%%%%%%%.%%%%%%%%%***+++-             #########*-        =++*#########                 *******..    .:@%@@%@@@####+                
+                             #%%@@@@@%----:::::           -#%%%%%%%%%%: %%%%%%%%%%+*++++             #########*:.       :+*#########                  =+*****..     :-@@%%@@@%####                
+                             #%%%%%%@=---:::::            ####%%%%%%%%   %%%%%%%%%%**+++.            #########*:.       :+*########+                   +++***..     .-=%%%%%%%****+               
+                             %%%%%%%#=-----::            -##%###%%%%%    #%%%%%%%%%#*++++            ########**..       -+#########.                   =+++*+.      .-=%%%%%%%*****               
+                             %%%%%%%+==-----.            #########%%-     %%%%%%%%%%==*++.           #########*...      .+########*=--.                             :-=%%%%%%%#****               
+                            *@%%%%%%-==-----            *######%%###      -%%%%%%%%%#+==++           #*#######* ..       +#####******+==-:                          .-=+%%%%%%%****               
+                            %%%%%%%@==------            #######%%##        %%%%%%%%%%=====-         .######*##*...       +#*************+==-:                        -=+%%%%%%%****=              
+                            %%%%%%%%==-----:           ###%%######:        -%%%%%%%%%*=====          ####******...       +****************+++==-                     -=+%%%%%%%#****              
+                           =%%%%%%%*===----           *###%###%###          %%%%%%%%%%=====:         **#*******...        *******************++++++                  :=+*%%%%%%%****              
+                           *@%%%%%%====----           ##%#%#%#%%#           -%%%%%%%%%#====-         ******##**...          *******************####***-              .=++%%%%%%%****:             
+                           #%%%%%%%====----          ##%%#%###%%-            %%%%%%%%%%====-:        **********...            .*******************######*-            -=+%%%%%%%****+             
+                           #%%%%%%%====---:         -##%%###%#%#             -%%%%%%%%%#===--       .**********...               .*******************######*.         -=+#%%%%%%#****             
+                           %%%%%%%#====---:         ####%%#%%##               #%%%%%%%%%===---      .**********...                   *******************#####*:       -=+*%%%%%%%****             
+                          +%%@%%%%*====---.        +#%%%%%%%%%-                %%%%%%%%%#===--.     :*********#....                     #******************##=--      -++*%%#####=-=+             
+                          -#%%%%%%#++++++=         #%%%%%%%%##%%#%%%%%%#%%#####%%%%###%%%===---     :*********#...                         +****************+==--     -+*#%%%%%%#====             
+                           *%%%%%%%+++++++:       *#%%%%%%####%%%%%%#%%##%#######%%%#####%==---     :**********...                            ***************+==--    =+*##%%%%%#====             
+                           *%%%%%%%+++++++:      :#%%########%%%%#%%%%%##%################+==---    -**********...                               **********+**+=--:   ++*%%%%%%%+===-             
+                           +%%%%%%%*++++++=      ##########%%%%%%#%%%%%##################%%==---    -**********...                                  #*******+**=---   =+*%%%%%%%====-             
+                           +%%%%%%%#+++++++     +%###########%%%%%%%%%%%###%####%##%#######*=----   =**********..      :%%###==--                   :**********+.... .=+*%%%%%%%====:             
+                            *%%%%%%%*++++++     %%#########                       %%########-----:  =**********..      :++####+=--                 .-*******+++=...  -=+#%#%%%%#====              
+                            +%%%%%%%+++++++:   #%#########                        *%%%######*----:  +**********..      :+**+#**+=--:               :-+*******++-...  -=+%#%%%%#+====              
+                            *%%%%%%%**+++++=  -%#########+                         %####%%###----:: +**********...     -****++**+----              --=******+++:..  .:=+#%%%%%%====-              
+                             %%%%%%%#**+++++ .%%%#######%                          =##%#######---:: ***********..      =****++++**-------        +****+****++++...  .-=###%#%%%====.              
+                             #%%%%%%%**+++++.%%%########                            %%%%######+--::.***********..      =****++++++*#***********####*+++++++****..   .-+%###%%%*====               
+                             *%%%%%%%***+++*%%%########:                            :##########---:.***********..      =***+++++****+*+*#########++++++++++++++     .-*###%%%%-====               
+                             +%%%%%%%%***+%%%#%%########=-:                       :############%-:..**********+..      =***++++****+***********++++++++++++++      .:=###%#%%%====-               
+                             .%#%%%%%%#**%%%#############*=-::.                  ###############=--.**********+..      -=**+*****+**********+++++++++++++++:       :-+#######+::::                
+                              =%%%%%%%%**################---:-::                 ###############=-:.**********=.       -===+******+***+**++++++++++++++++:        .-+#######*::::                 
+                               =%%%%%%%%+###########%%%%#----:::                 ###%%%%#*+=.    :.**********#         -+....  -**+++++++++++++++++++++          .-=#######*::::                  
+                                =%%%%%%%#.                   :::                                  ***********          -.           -++++++++++++++=            .-+########::::.                  
+                                :=%%%%%%##:                                                     .***********                                                  .:-=########:::::                   
+                                  =%%%%%%##-.                                                 -************                                                  .:=+########:::::                    
+                                  :=%%%%%%##=-:.                                  *#*****++**************#                                                 .:-+*########::::-                     
+                                   .=%%%%%%%%+=-:....                            ************************                                                 :-=+#########::::-                      
+                                    -=%%%%%%%%++=--:::.                          **********************:                                                 -=+*#########:::::                       
+                                     .+%%%%%%##**+=---::                         *******************.                                                  :=+*#%########:::-:                        
+                                      -=%%######%***++=--:                           :+#********+                                                     +**###########::::-                         
+                                       .+#####%#%%##***++==                                                                                         +*##%%#########:::::.                         
+                                        :-%%%##%#%%%###****++                                                                                     *##%%%##########::::-                           
+                                          ==%%%%%%%%%######***+                                                                                 ##%%%%%##########:::::                            
+                                           -=#%%%%%%%%%%########*                                                                             #%%%%%###########....:                              
+                                             =-%%%%%%%%#%%%%%%%%%##                                                                         %%%%%%###########:.:::.                               
+                                              :=*%%%%%%%%%%%%%%%%%%%#*                                                                   *%%%%%%##########*.....:                                 
+                                                --%%%%%%%%%%%%%%%%%%%%%#-                                                              %%%%@%%##########=....:.                                   
+                                                  ==%#%%%%%%%%%%%%%%%%%%%%#+                                                       #@@@@@@%###########:::.:..                                     
+                                                   .-+%%%%%%%%%%%%%%%%%%%%%%%%#+                                               :@@@@@@%#############.::::.:.                                      
+                                                     :-:#%%%%%%%%%%%%%%@%%%%%%%%%%%%+                                     .*@@@@@@@##############+:.:.:::.                                        
+                                                       ----%%%%%%%%%%%%%%%%@@@@@%%%%%%%###*                        +@%@@@@@@@@@###############%........                                           
+                                                         :---:#%%%%%%%%%%%%%%%%%%@@@@@@@@%%%%%%%%%%%%##%%%%%%%%%@@@@@@@@@@@#################::......:                                             
+                                                            :::::+%%%%%%%%%%%%%%%%%%%%%%%@@@@@@@@@@@@@@@@@@@@@@@@@@%%%%%%##############%:....::::..                                               
+                                                              ::::::-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%####%%%%%##%%#####%%%############-:......::..                                                  
+                                                                 .::::::+%%%%%%%%%%%%%%%%%%%%%%%%%%############%##%##%%%########:...........:                                                     
+                                                                     ::::::--%#%%%%%%%%%%%%%%%%%%%%########%###%#%%%#######%.:.....:::.::.                                                        
+                                                                         .:::::::::::::=*%%%%%%%%%#####################+::.::.:.:..::.                                                            
+                                                                             .:::::::::::::::::::::::::::::::::::::::::::.:::.::.                                                                 
+                                                                                 ..::::::::::::::::::::::::::::::.:::::::::.                                                                      
+                                                                                            .::::::::::::::::::::::::..                                                                           
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+                                                                                                                                                                                    
+`;
+
+            const ascii2 = `                                                                                                                                                                                           
+                                                                                     .                                                                                                     
+                                                                                :.  .@@@:-=                                                      :@@@:                                     
+                                                                                :@*@@@@@@@@   :                                 . ::           :=*@@@-                                     
+                                                                                 .*@@@@@@@@@@@@@@:                            :#@@@*           :@@@@@@@@                                   
+                                                                              ..  .:@@@@@@@@@@.                                *#@@@           #@@@@@@@-                                   
+                                                                                ::     .::#@@@@:                              :#%%%@@  #@@* #@@@@@@@@*=  .                                 
+                                                                                   @#@@@@:@@@@@%. .:                    .   ..=#%@@@@@@@@@@@@@@@@@@@@@@@@@@@-                              
+                                                                                   #@@@@@@@@@@@@@@@@@:.                      :%%%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@:                            
+                                                                                    ..=+@@@@@@@@@@@@@@-                       -*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*::                         
+                                                                                        .*@@@@@@@@@@##                      :::+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-                            
+                                                                                       .*@=:   ----#@@@#@@.:                   =@@@@@@@@@@@@@@@@@@@@@@@@@@@@+                              
+                                                                           .. .           . :-#%##%@@@+@@@@@@:=:                 @@@@@@@@@@@@#@@@@@@@@@@@@@@.                              
+                                                                                                 -+*+++*@@@@@#            .:*#-@@@%@@@@@@@@@@@@@@@@@@.                                     
+                                                                               -*%@@@@@@@@@@@@@@@@@@@%--=*+@@@@@@      *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*::::                              
+                                                                         :*@@@@@@@@@@@@@@@@@@@@@@@@@@@@%#+:  +#@@@   .*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.                                  
+                                                                     :%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%-.    %    . @@@@@@@@@@@@@@@@@@@@@@@@@@*-.                                      
+                                                                  :@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@:         . @@@@@@@@@@@@@@@@@@%@+-=:.+%@@@@@@+                             
+                                                                =@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-      . : :@@@@@@@@@@@@@@@@@@+@@@@@@@@@@@@@@@                       
+                                                              *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@=.     ++*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                     
+                                   ....::::.                +@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*=-+-#%#-=@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@=@@=             
+                                          .::::...        .%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*#@@@#@@@@@@@@@@@@@@@@@@@@%*##@@@@@@%@@#*                 
+                                            .::::::::::. :@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#*    ..   ....               
+                                                    :-  =@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#=                     
+                                                :@@@@. =@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@++#%@@@@@@@@@@@@@@@@@@@@@@@@@@*-    :@@@@@@@@=-
+                                               :@@@@  *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%@+-%+   -:*@%-+#@@@@@@@@%#: :  %@@@@@@@@@@@
+                             .:::::::::=-=-:  =@@@@  *%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#@@@@@@@@ :=+++=.:.   =@@@@@@@@@@@@@+    
+                                        =@@@@@@@@@  =#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#@@@@@@@@@@@.    . -*: =+@@@@@@@@@@*+++=-            
+                                       -**@@@@@@@: -*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%####++=-::.::  ..:::::-==---=@@@@@@@@@@ -#@@@@@@@@@@@@@@@@@#@#%@@@@@@@@-+@#                 
+                                    ::*+%@@@@@@@+ :*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+::  .::..:..-%@@- ..  .: +*       .*@%@@@@@@@@@@@@@: -@@@@@@@@@@@                  
+                                   .@@+*#@@@@@@+  =@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*-:  -  =*#@@@@@@@@#%::@@*--*+#@@@@@@@@#=...=*@@@@@@@=     ::@@@=      @           
+                                  %@@@@@@@%#%+-  :*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+@@@@@*.+#*+@@@@@@@@@@@@@@%@@@@@@@@@@@@@@@..:#@@@@@@*.     .%@@                
+                      . :::@**@@@@@%%@@@@@@@=-   :*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@-*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@=@@@@@@@@=                        
+                                             :   -%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@==@@@@@@*::.                    
+                                                 =*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%%##@%+@@@@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@=@@@@@@@@@@@@@@@@@@@ .:.....                      
+                                                 +*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@##+=::              :: :::@@@-.  ::       ..   .:::+@@@@@@@@@@@@@@@@@                               
+                                                 +*@@@@@@@@@@@@@@@@@@@@@@@%*=:.   .:.                                                    .  ::==@@@@@@@@@@@@@@@@@@@-:.                     
+                                                  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#**                                                             .@@@@@@@@@@@@@+*@                       
+                                                 @@@@@@@@@@@@@@@@@@@@@@@@@@@-                                                                          #@@@@@@@@@@. +: .                   
+                                                @@@@@@@@@@@@@@@@@@@#:.                        .-==:.                                                      @@@@@@@@.                        
+                                               *@@@@@@@@@@@@@@%@@@@@@@@@@@@@@@@@@@@@@@@ -*+ #@@@@@@@@@@@@@@*.                                               @@@@@:                         
+                                               @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@: @@@.*@@@@@@@@@@@@@@@@@@@@#                                           @@@-                          
+                                               %@@@@@@@@@@@@@@@@@@@@@@@@@@@@:     ..   -@@@*             +@@@@@@@@@@@+.                                        .%@#@@@:  :                 
+                                   #%@@        %@@@@@@@@@@@@@@@@@@@@@@%                 -=-                   =@@@@@@@@@#                                            =*+*#-.               
+                              .*@@@@@@@@@#:.   =@@@@@@@@@@@@@@@=-                                                    +@@@@#                                                -*##*+:.:       
+                                  .             %@@@@@@@@-                                                                +#-                                                              
+                                                  +*+                                                                                                                                      
+                                                                                                                                                                                           
+                                                                                        +++++.                                                                                             
+                                                                                      ++++++++++                                                                                           
+                                                                                     +++++++++++++                                                                                         
+                                                                       -           +++++++++++++::::..       @@@@@@@@%=                                                                    
+                                                         :-+%@@@@@@@@@            +++++++++++++::::::::..:.@@@@@@@@@@@@@@@@%:                                                              
+                                                     .:*@@@@@@@@@@@@:           +++++++++++++:.::::.::::.-@@@@@@@@@@@@@@@@@@@*                                                             
+                                                    :%@@@@@@@@@@@@@            +++++++++++++:..::::::::.@@@@@@@@@@@@@@@@@@@@@@*                                                            
+                                                   -@@@@@@@@@@@@@*           :++++++++++++=.:::::::::..@@@@@@@@@@@@@@@@@@@@@@@@=                                                           
+                                                  .#@@@@@@@@@@@@            +++++++++++++.:::::.::::.:@@@@@@@@@@@@@@@@@@@@@@@@@@                                                           
+                                                  .#@@@@@@@@@@@            +++++++++++++::.:.::.:::.#@@@@@@@@@@@@@@@@@@@@@@@@@@@                                                           
+                                                   *@@@@@@@@@:            ++++++++++++-:..:::..:::.@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                                                           
+                                                   -@@@@@@@@            +++++++++++++...::::::::.*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                                                           
+                                                    #@@@@@@            +++++++++++++:.:.   ..::.@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+                                                           
+                                  . .               +@@@@@            +++++-   +++.:::.     ..-@@@@@    @@@@@@@@@@@@@@@@@@@@@@@                                                            
+                                :@@@@@@@             @@%*            ++++++     +.:.::.     .@@@@@@:    +@@@@@@    @@@@@@@@@@@-                                                            
+                               :@@@@@@@@@@@@@@       :%*             +++++++   -.:.::.:::...@@@@@@@@+  +@@@@@@%    =@@@@@@@@@+                                                             
+                            *+:+@@@@@@@@@@@@@@@@%%   -@             ++++++++++:....::.:::.-@@@@@@@@@@@@@@@@@@@@@#+@@@@@@@@@@+                                                              
+                  ..   #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@        ::--=+++++++  ..:..:..    @@@@@@@@@*%@@@@@@@@@@@@@@@@@@@@@#                                                               
+    .:::::::::. ...   :::-=***%@@@@@@@@@@@@@@@@@@@@@@@@@@@       .   -=++++.    ....::.    @@@@@@@@@    @@@@@@   +@@@@@@@@#                                                                
+                              %@@@@@@@@@@@@@@@@@@@@@%@@*             .=+++.     ......:    @@@@@@@@*   @@@@@@@    @@@@@@@+                                                                 
+                              ***@#*@@@@@@@@@@@@@@@@@@@               ==+       .... @@    @@@@@@@@:   @@@@@@@    @@@@@@*                                                                  
+                                -*@@@@@@@@@@@@@@@@@@@@@@@#            =-         ...@@@    @@@@@@@@    @@@@@@.   @@@@@@*                                                                   
+                    ..       =@@@@@@@@@#=@@@@@@@@@@@@@@@@@*.+*                    =@@@@=   @@@@@@@@   %@@@@@@    @@@@@+                                                                    
+                           .:@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                   @@@@@@*  :@@@@@@@@   @@@@@@@   @@@@@=                                                                     
+                         #@@@@@@@@@@@@@@@@@@@@@@@@@#@@@@@@@@@@                  @@@@@@@%  *@@@@@@@@   @@@@@@    @@@@*                                                                      
+            ...:.:::::::*@%#%**%@@@@@@@@@@@@@@%#*@@@@@@@@@@@@@@@=               @@@@@@@@  @@@@@@@@@  @@@@@@@   @@@@#:                                                                      
+                          .: . ..:******+:.%@@@@@@##@@@@@@@@@@@@@@              @@@@@@@@  @@@@@@@@=  @@@@@@@  -@@@%:                                                                       
+                                      :@@@@@@@@@@@@@%*%@@@@@@@@@@@+         @.  @@@@@@@@  @@@@@@@@  @@@@@@@   @@@@+                                                                        
+                                   :@@@@@@@@@@@@@@@@@@@@@@*+--:==          @@@  @@@@@@@@ -@@@@@@@@  @@@@@@@  @@@@#:                                                                        
+                                    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@ @@@@@@@  @@@@#-                                                                         
+                                  #@@@@@@@@@@@@@@@@#%@@@@@@@@@@@@   -    @@@@@@ @@@@@@@@:@@@@@@@@%+@@@@@@@ @@@@@=                                                                          
+                                 @@@@@@@@@@@@@@@@@@@@+@#+**#@@@@@@       @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@%=                                                                           
+                              @@@@@@@@@@@@@@@@@@@@@@@@@@@@ *++%@@@      -@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%#=                                                                            
+                          -@@@@@@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+    *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#+.                                                                             
+                        :*#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@      -#@@@@@@@@@@@@@@@@@@@@@@@@@@%#+-                                                                                
+                        @@@@@@@@@@@@@@@@@@@#@@@@@@@@@@@@@@@@@@@@@@@@@@@                                                                                                                    
+                         =@@@@@@@@@@@@@@@@@@@@@@@@@@%-++#***%#**#@@@@                                                                                                                      
+                       :@@@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%     :*@@@                                                                                                                      
+                       :@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@    ...                                                                                                                       
+                        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@                                                                                                                           
+                        @@@@@@@@@@%@@@@@@@#**+*%*%@@@@@@@@@@@@@@@@@#* .                                                                                                                    
+                       *%%+ ..:+=-:-::   :             :.:+-=++*%@-#@@@@==@@@@##::                                                                                                         
+                                                                    .-++*%*%@@@##@@@@@@@@@@#=:::::::::::                                                                                   
+                                                                                  :                                                                                                        
+                                                                         ..:                                                                                                               
+                                     
+`;
+
+            const asciiDisplay = document.getElementById('asciiContent');
+            const glitchOverlay = document.getElementById('glitchOverlay');
+            let currentAscii = 1;
+            let isGlitching = false;
+            let glitchTimer = null;
+            let displayTimer = null;
+
+            function setAscii(num) {
+                asciiDisplay.textContent = num === 1 ? ascii1 : ascii2;
+                currentAscii = num;
+            }
+
+            function glitchStep(target, callback) {
+                if (isGlitching) return;
+                isGlitching = true;
+                glitchOverlay.classList.add('active');
+                asciiDisplay.classList.add('glitch-distort');
+
+                let steps = 0;
+                const maxSteps = 20;
+                const interval = 50;
+
+                const glitchInterval = setInterval(function() {
+                    // Randomly mutate characters
+                    let current = asciiDisplay.textContent;
+                    let chars = current.split('');
+                    for (let i = 0; i < chars.length; i++) {
+                        if (Math.random() < 0.15) {
+                            const r = Math.random();
+                            if (r < 0.33) chars[i] = String.fromCharCode(33 + Math.floor(Math.random() *
+                            94));
+                            else if (r < 0.66) chars[i] = ' ';
+                            else chars[i] = chars[i] === ' ' ? '#' : ' ';
+                        }
+                    }
+                    asciiDisplay.textContent = chars.join('');
+
+                    steps++;
+                    if (steps >= maxSteps) {
+                        clearInterval(glitchInterval);
+                        // Final swap to target
+                        asciiDisplay.textContent = target === 1 ? ascii1 : ascii2;
+                        asciiDisplay.classList.remove('glitch-distort');
+                        glitchOverlay.classList.remove('active');
+                        isGlitching = false;
+                        currentAscii = target;
+                        if (callback) callback();
+                    }
+                }, interval);
+            }
+
+            function startCycle() {
+                // Start with ASCII 1
+                setAscii(1);
+
+                function cycle() {
+                    if (isGlitching) return;
+
+                    const next = currentAscii === 1 ? 2 : 1;
+                    const stayTime = 12000; // 12 seconds
+
+                    displayTimer = setTimeout(function() {
+                        if (isGlitching) return;
+                        glitchStep(next, function() {
+                            // After glitch, wait and then cycle again
+                            displayTimer = setTimeout(function() {
+                                cycle();
+                            }, stayTime);
+                        });
+                    }, stayTime);
+                }
+
+                // Start the cycle after initial display
+                displayTimer = setTimeout(function() {
+                    cycle();
+                }, 12000);
+            }
+
+            // ── Start the ASCII glitch cycle ──
+            setAscii(1);
+            // Wait a moment then start the cycle
+            setTimeout(startCycle, 1000);
+
+            // ── Clean up timers on page unload ──
+            window.addEventListener('beforeunload', function() {
+                if (displayTimer) clearTimeout(displayTimer);
+                if (glitchTimer) clearTimeout(glitchTimer);
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
