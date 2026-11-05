@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ajs-admin
+  template:
+    metadata:
+      labels:
+        app: ajs-admin
+    spec:
+      containers:
+        - name: admin
+          image: ajs-suite-admin:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8001
+          envFrom:
+            - secretRef:
+                name: ajs-admin-secrets
+          readinessProbe:
+            httpGet:
+              path: /admin/health
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin
+spec:
+  selector:
+    app: ajs-admin
+  ports:
+    - port: 8001
+      targetPort: 8001
