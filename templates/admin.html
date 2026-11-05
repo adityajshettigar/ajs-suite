@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>AJS Suite // Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg-primary:#1e1e1e;--bg-secondary:#1a1a1a;--bg-panel:#252525;--bg-card:#252525;--text-primary:#d4d4d4;--text-secondary:#b0b0b0;--text-muted:#7a7a7a;--border-color:#2d2d2d;--accent:#ff6600}
+    .light-mode{--bg-primary:#f5f5f5;--bg-secondary:#ebebeb;--bg-panel:#fff;--bg-card:#fff;--text-primary:#1a1a1a;--text-secondary:#333;--text-muted:#666;--border-color:#ccc;--accent:#ff6600}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg-secondary);color:var(--text-primary);font-family:Inter,Segoe UI,sans-serif;min-height:100vh}
+    .window{min-height:100vh;background:var(--bg-primary);border:1px solid var(--border-color);display:flex;flex-direction:column}
+    header{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--border-color);font:13px "JetBrains Mono",monospace}
+    .accent{color:var(--accent)}main{width:min(100% - 40px,1000px);margin:48px auto;flex:1}
+    .eyebrow{font:12px "JetBrains Mono",monospace;color:var(--accent);letter-spacing:1.2px}h1{font:600 28px "JetBrains Mono",monospace;margin:12px 0}
+    .muted{color:var(--text-secondary);line-height:1.7}.panel{margin-top:28px;padding:22px;border:1px solid var(--border-color);background:var(--bg-panel)}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}.label{font:12px "JetBrains Mono",monospace;color:var(--text-muted)}
+    .value{margin-top:6px;font-size:14px}.status{color:#70c48f;font:12px "JetBrains Mono",monospace}
+    button{border:1px solid var(--border-color);background:transparent;color:var(--text-primary);padding:10px 14px;font:12px "JetBrains Mono",monospace;cursor:pointer}button:hover{border-color:var(--accent);color:var(--accent)}
+    footer{border-top:1px solid var(--border-color);padding:14px 18px;color:var(--text-muted);font:11px "JetBrains Mono",monospace}
+  </style>
+</head>
+<body><div class="window">
+  <header><span>AJS <span class="accent">//</span> SUITE</span><span class="accent">ADMIN CONSOLE</span></header>
+  <main>
+    <div class="eyebrow">AUTHENTICATED SESSION · ADMIN</div>
+    <h1>Control <span class="accent">Panel</span></h1>
+    <p class="muted">The public portfolio remains accessible without signing in. This protected area is the starting point for private site-management features.</p>
+    <section class="panel">
+      <div class="row">
+        <div><div class="label">SIGNED IN AS</div><div class="value">{{ admin.name }} · {{ admin.email }}</div></div>
+        <span class="status">● VERIFIED</span>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="label">SYSTEM STATUS</div>
+      <p class="value">Authentication is active. No portfolio content-management actions have been enabled yet.</p>
+      <p class="muted">Next steps can add protected profile editing, project updates, message management and audit events. These features will be added only after their server-side access controls are implemented.</p>
+    </section>
+    <form method="post" action="{{ url_for('admin_logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit">[ SIGN OUT ]</button>
+    </form>
+  </main>
+  <footer> AJS_SUITE / PRIVATE_ADMIN_INTERFACE <span class="accent">[ SESSION PROTECTED ]</span></footer>
+</div></body></html>
