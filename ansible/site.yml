@@ -1,0 +1,116 @@
+---
+- name: Configure AJS Suite web server
+  hosts: web
+  become: true
+  gather_facts: true
+
+  vars:
+    app_repo_url: "https://github.com/adityajshettigar/ajs-suite.git"
+    app_repo_branch: "main"
+    app_deploy_dir: "/opt/ajs-suite"
+
+    required_packages:
+      - ca-certificates
+      - docker.io
+      - docker-compose-v2
+      - git
+
+  tasks:
+    - name: Verify the server is Ubuntu
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == "Ubuntu"
+        fail_msg: "This playbook currently supports Ubuntu servers only."
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name: "{{ required_packages }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Enable and start Docker
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Create application directory
+      ansible.builtin.file:
+        path: "{{ app_deploy_dir }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+
+    - name: Clone or update AJS Suite
+      ansible.builtin.git:
+        repo: "{{ app_repo_url }}"
+        dest: "{{ app_deploy_dir }}"
+        version: "{{ app_repo_branch }}"
+        update: true
+        force: false
+      become_user: ubuntu
+
+    - name: Verify Docker Compose is available
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - version
+      changed_when: false
+
+    - name: Verify the Compose file exists
+      ansible.builtin.stat:
+        path: "{{ app_deploy_dir }}/compose.yaml"
+      register: compose_file
+
+    - name: Require the Compose file
+      ansible.builtin.assert:
+        that:
+          - compose_file.stat.exists
+        fail_msg: "compose.yaml was not found in the cloned repository."
+
+    - name: Render production environment file
+      ansible.builtin.template:
+        src: templates/admin.env.j2
+        dest: "{{ app_deploy_dir }}/.env"
+        owner: root
+        group: root
+        mode: "0600"
+      when: deploy_application | default(false) | bool
+
+    - name: Validate production Compose configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - config
+          - -q
+      args:
+        chdir: "{{ app_deploy_dir }}"
+      changed_when: false
+      when: deploy_application | default(false) | bool
+
+    - name: Deploy AJS Suite containers
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - up
+          - -d
+          - --build
+      args:
+        chdir: "{{ app_deploy_dir }}"
+      when: deploy_application | default(false) | bool
+
+    - name: Check application health
+      ansible.builtin.uri:
+        url: http://127.0.0.1/admin/health
+        method: GET
+        status_code: 200
+      register: app_health
+      retries: 12
+      delay: 5
+      until: app_health.status == 200
+      when: deploy_application | default(false) | bool
