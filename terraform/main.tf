@@ -84,14 +84,25 @@ resource "aws_security_group" "web" {
   description = "HTTP access and restricted SSH for AJS Suite"
   vpc_id      = aws_vpc.main.id
 
+  # Cloudflare tunnel terminates TLS at the edge; traffic from cloudflared
+  # to nginx is plain HTTP on localhost. Port 80 SG rule depends on setup:
   ingress {
-    description = "HTTP portfolio access"
+    description = "HTTP portfolio access (port 80)"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Optional: restrict port 80 to Cloudflare IP ranges only.
+  # Set var.allow_cloudflare_only = true and populate var.allow_cloudflare_ip_v4
+  # to limit port 80 to Cloudflare infrastructure.
+  #
+  # If allow_cloudflare_only = true (and var.allow_cloudflare_ip_v4 is set):
+  #   cidr_blocks = [var.allow_cloudflare_ip_v4]
+  #
+  # If allow_cloudflare_only = false (default): tcp/80 open to 0.0.0.0/0
+  #   (Cloudflare tunnel handles HTTPS; SG rule is a fallback).
   ingress {
     description = "SSH from administrator IP only"
     from_port   = 22

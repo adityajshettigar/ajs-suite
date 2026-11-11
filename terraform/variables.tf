@@ -53,3 +53,9 @@ variable "public_subnet_cidr" {
   type        = string
   default     = "10.20.1.0/24"
 }
+
+variable "domain_name" {
+  description = "Domain name suffix (e.g. 'example.com') for the Cloudflare tunnel."
+  type        = string
+  default     = "your-domain.com"
+}

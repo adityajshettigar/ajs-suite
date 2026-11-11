@@ -1,0 +1,23 @@
+[Unit]
+Description=AJS Suite Admin Service
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=notify
+WorkingDirectory=/opt/ajs-suite
+ExecStart=/opt/ajs-suite/venv/bin/gunicorn --workers 1 --threads 4 --bind 0.0.0.0:8001 --timeout 30 app:app
+ExecStop=/usr/bin/docker compose -f /opt/ajs-suite/compose.yaml stop
+ExecRestart=/usr/bin/docker compose -f /opt/ajs-suite/compose.yaml up -d --build
+
+# Grant the service access to the docker socket so it can manage containers
+ExecStartPost=/usr/bin/docker compose -f /opt/ajs-suite/compose.yaml up -d --build
+
+Restart=on-failure
+RestartSecital 5
+
+# Limit the service to one Gunicorn worker to keep in-memory rate-limit behavior consistent
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,28 @@
+# Minikube manifests for AJS Suite
+# ⚠️ WARNING: Minikube on a t3.micro will NOT run ELK + Grafana + app together.
+# Resource math won't work — Elasticsearch alone needs ~2GB RAM, Grafana needs ~256MB,
+# and the app needs ~128MB. A t3.micro has only 1GB RAM and 1 vCPU.
+#
+# Recommended: Deploy the app via Docker Compose on the EC2 directly (as this project
+# is configured for). Use Minikube only for lightweight services or on a more powerful
+# machine (t3.medium+, or a dedicated Kubernetes host).
+#
+# This directory contains minimal manifests for reference only.
+
+# To start Minikube (on a more powerful machine):
+#   minikube start --memory=4096 --cpus=2
+#
+# To deploy the app:
+#   kubectl apply -f k8s/minikube/
+
+# For the current Docker Compose-based deployment on EC2, see:
+#   - compose.yaml (main app: admin + web/nginx)
+#   - monitoring/docker-compose.yaml (Prometheus + Grafana — optional)
+#   - elk/docker-compose.yaml (ELK stack — heavy, separate host recommended)
+
+# Minikube resource estimate:
+#   App (Docker Compose): ~256MB RAM
+#   Prometheus + Grafana: ~512MB RAM
+#   ELK Stack (Elasticsearch alone): ~2GB RAM minimum
+#   t3.micro: 1GB RAM, 1 vCPU — INSUFFICIENT for ELK + Grafana + app
+#   t3.medium: 4GB RAM, 2 vCPU — BARELY sufficient for app + Grafana, not ELK

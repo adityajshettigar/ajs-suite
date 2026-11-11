@@ -4,6 +4,29 @@ This adds a separate Google OpenID Connect-protected `/admin/` area. The public 
 
 ## Important prerequisites
 
+⚠️ **HTTPS is REQUIRED for Google OAuth** — Google only accepts `https://` redirect URIs for non-localhost origins. You must set up one of the following:
+
+### Option 1: Cloudflare Tunnel (Recommended — simplest, free, no cert management)
+1. Sign up for a free Cloudflare account
+2. Point your domain's Nameservers to Cloudflare (change at your domain registrar)
+3. In Cloudflare, create a Tunnel -> `localhost:8086` (your Docker nginx internal port)
+4. Cloudflare will give you a free TLS hostname URL (e.g., `ajs-suite.trycloudflare.com`)
+5. Use that URL as your `APP_BASE_URL` and as the Google OAuth redirect URI:
+   `https://<your-cloudflare-tunnel>.cloudflare.com/admin/auth/callback`
+6. Set `APP_BASE_URL` to the same Cloudflare Tunnel URL
+
+### Option 2: Custom Domain + Let's Encrypt
+1. Register a domain (e.g., via Cloudflare or Route 53)
+2. Point A record to the EC2 public IP
+3. Install certbot on the EC2 and obtain HTTPS certificate
+4. Set `APP_BASE_URL=https://your-domain.com`
+5. Configure Google OAuth redirect URI as `https://your-domain.com/admin/auth/callback`
+
+### Option 3: Direct HTTPS (not recommended — requires ACM/ALB)
+- Use AWS ACM + ALB in front of EC2
+- Configure Route 53 DNS + ACM import
+- Set `APP_BASE_URL` to the ALB DNS name
+
 - A domain name with HTTPS configured on Nginx. Do not expose the admin login over plain public HTTP.
 - A Google OAuth client configured as a **Web application**.
 - Add this exact authorised redirect URI in Google Cloud:

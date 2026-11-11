@@ -1,11 +1,12 @@
-output "instance_id" {
-  description = "New EC2 instance ID."
-  value       = aws_instance.web.id
-}
-
+# Outputs from terraform apply
 output "public_ip" {
   description = "Automatically assigned public IPv4 address."
   value       = aws_instance.web.public_ip
+}
+
+output "domain" {
+  description = "Domain name for HTTPS (Cloudflare tunnel or custom)."
+  value       = "ajs-suite.${var.domain_name}"
 }
 
 output "portfolio_url" {

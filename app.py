@@ -1,9 +1,11 @@
+import time
 import os
 from datetime import timedelta
 from pathlib import Path
 
 from authlib.integrations.flask_client import OAuth
-from flask import Flask, abort, redirect, render_template, session, url_for
+from flask import g
+from flask import Flask, abort, redirect, render_template, request, Response, session, url_for
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_session import Session
@@ -36,7 +38,8 @@ if not ADMIN_EMAILS:
 SESSION_DIR.mkdir(parents=True, exist_ok=True)
 
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+app.wsgi_app = ProxyFix(app.wsgi_app,
+                        x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.config.update(
     SECRET_KEY=SECRET_KEY,
     SESSION_TYPE="filesystem",
@@ -52,8 +55,17 @@ app.config.update(
     WTF_CSRF_TIME_LIMIT=timedelta(hours=2),
     MAX_CONTENT_LENGTH=1024 * 1024,
 )
-Session(app)
-CSRFProtect(app)
+
+@app.before_request
+def record_metrics_start():
+    g.request_start = time.time()
+
+@app.after_request
+def record_metrics_end(response):
+    duration = time.time() - g.request_start
+    REQ_COUNT.labels(method=request.method, endpoint=request.path, status=response.status_code).inc()
+    REQ_DURATION.labels(endpoint=request.path).observe(duration)
+    return response
 
 limiter = Limiter(
     get_remote_address,
@@ -140,15 +152,74 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
-@app.get("/admin/health")
+@app.get("/health")
 @limiter.limit("30 per minute")
 def health():
     return {"status": "ok"}
 
 
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+
+# Prometheus metrics
+REQ_COUNT = Counter('http_requests_total', 'Total requests', ['method', 'endpoint', 'status'])
+REQ_DURATION = Histogram('http_request_duration_seconds', 'Request duration', ['endpoint'])
+JIRA_EVENTS = Counter('jira_events_total', 'Total Jira events', ['event'])
+
+@app.get("/metrics")
+@limiter.exempt
+def metrics():
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
+
 @app.errorhandler(429)
 def rate_limited(_error):
     return "Too many requests. Please wait and try again.", 429
+
+
+# Jira webhook secret verification
+JIRA_WEBHOOK_SECRET = os.environ.get("JIRA_WEBHOOK_SECRET", "")
+
+
+@app.post("/webhooks/jira")
+def jira_webhook():
+    """Inbound webhook from Jira."""
+    secret = request.args.get('secret') or \
+             request.headers.get('X-Jira-Secret')
+    if secret != JIRA_WEBHOOK_SECRET:
+        return {'error': 'forbidden'}, 403
+    payload = request.get_json(silent=True) or {}
+    event = payload.get('webhookEvent', 'unknown')
+    app.logger.info('jira_webhook event=%s', event)
+    # Record metric for Grafana (see 4.6):
+    #   JIRA_EVENTS.labels(event=event).inc()
+    return {'ok': True}
+
+
+@app.post("/admin/jira/create")
+def jira_create():
+    """Admin action -> create Jira issue (requires authenticated admin)."""
+    email = session.get("admin", {}).get("email", "").lower()
+    if not email or email not in ADMIN_EMAILS:
+        return {"error": "unauthorized"}, 401
+    import requests, base64
+    body = request.get_json(silent=True) or {}
+    token = base64.b64encode(
+        f"{os.environ['JIRA_EMAIL']}:{os.environ['JIRA_API_TOKEN']}".encode()
+    ).decode()
+    try:
+        r = requests.post(
+            f"{os.environ['JIRA_BASE_URL']}/rest/api/2/issue",
+            headers={'Authorization': f'Basic {token}',
+                     'Content-Type': 'application/json'},
+            json={'fields': {
+                'project': {'key': os.environ['JIRA_PROJECT_KEY']},
+                'summary': body.get('summary', 'AJS demo issue'),
+                'issuetype': {'name': 'Task'},
+            }}, timeout=10)
+    except requests.RequestException as e:
+        return {"error": "jira unreachable", "detail": str(e)[:200]}, 502
+    return {'ok': r.ok, 'status': r.status_code,
+            'issue': r.json().get('key') if r.ok else None}
 
 
 if __name__ == "__main__":

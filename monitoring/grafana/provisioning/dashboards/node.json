@@ -1,0 +1,48 @@
+{
+  "title": "AJS Node Overview",
+  "uid": "ajs-node-overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "CPU % (all modes)",
+      "datasource": {"type": "prometheus", "uid": "prometheus-default"},
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [{
+        "expr": "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)",
+        "legendFormat": "{{instance}}"
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory % used",
+      "datasource": {"type": "prometheus", "uid": "prometheus-default"},
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [{
+        "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+        "legendFormat": "{{instance}}"
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Disk % used (/)",
+      "datasource": {"type": "prometheus", "uid": "prometheus-default"},
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+      "targets": [{
+        "expr": "100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})",
+        "legendFormat": "{{instance}}"
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP req/s (admin app)",
+      "datasource": {"type": "prometheus", "uid": "prometheus-default"},
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+      "targets": [{
+        "expr": "sum(rate(http_requests_total[1m]))",
+        "legendFormat": "all"
+      }]
+    }
+  ]
+}

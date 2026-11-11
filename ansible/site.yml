@@ -1,5 +1,5 @@
 ---
-- name: Configure AJS Suite web server
+- name: Configure AJS Suite web server (Phases 2+)
   hosts: web
   become: true
   gather_facts: true
@@ -8,12 +8,26 @@
     app_repo_url: "https://github.com/adityajshettigar/ajs-suite.git"
     app_repo_branch: "main"
     app_deploy_dir: "/opt/ajs-suite"
-
+    manage_systemd: false
+    deploy_application: true
+    # Secrets sourcing: preferred vault, fallback to .env on controller
+    # README: "You need either the vault password or a populated .env on the"
+    # "controller to run the playbook."
+    # If any secret below is the placeholder, the playbook will fail early.
+    cloudflare_tunnel_token: ${CLOUDFLARE_TUNNEL_TOKEN}
+    google_client_id: ${GOOGLE_CLIENT_ID}
+    google_client_secret: ${GOOGLE_CLIENT_SECRET}
+    admin_emails: ${ADMIN_EMAILS}
+    grafana_admin_password: ${GRAFANA_ADMIN_PASSWORD}
+    kibana_password: ${KIBANA_PASSWORD}
     required_packages:
       - ca-certificates
       - docker.io
       - docker-compose-v2
       - git
+      - apache2-utils  # for htpasswd
+      - python3-requests  # for health checks
+
 
   tasks:
     - name: Verify the server is Ubuntu
@@ -71,6 +85,36 @@
           - compose_file.stat.exists
         fail_msg: "compose.yaml was not found in the cloned repository."
 
+    - name: Generate SECRET_KEY if using placeholder
+      ansible.builtin.command:
+        argv:
+          - python3
+          - -c
+          - "import secrets; print(secrets.token_hex(32))"
+        register: secret_key_output
+        changed_when: false
+      when:
+        - deploy_application | default(false) | bool
+        - secret_key == "REPLACE_WITH_AT_LEAST_32_RANDOM_BYTES"
+
+    - name: Set SECRET_KEY in vars if generated
+      ansible.builtin.set_fact:
+        secret_key: "{{ secret_key_output.stdout.strip() }}"
+      when:
+        - deploy_application | default(false) | bool
+        - secret_key == "REPLACE_WITH_AT_LEAST_32_RANDOM_BYTES"
+
+    - name: Pre-flight assertion: check all required secrets are set
+      ansible.builtin.assert:
+        that:
+          - cloudflare_tunnel_token is not none and cloudflare_tunnel_token != "REPLACE_WITH_TUNNEL_TOKEN"
+          - google_client_id is not none and google_client_id != "YOUR_GOOGLE_OAUTH_CLIENT_ID"
+          - google_client_secret is not none and google_client_secret != "YOUR_GOOGLE_OAUTH_CLIENT_SECRET"
+          - admin_emails is not none and admin_emails != "you@example.com"
+          - grafana_admin_password is not none and grafana_admin_password != "REPLACE_WITH_STRONG_PASSWORD"
+          - kibana_password is not none and kibana_password != "REPLACE_WITH_STRONG_PASSWORD"
+        fail_msg: "Missing required secrets. Set CLOUDFLARE_TUNNEL_TOKEN, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ADMIN_EMAILS, GRAFANA_ADMIN_PASSWORD, KIBANA_PASSWORD in .env or vault."
+
     - name: Render production environment file
       ansible.builtin.template:
         src: templates/admin.env.j2
@@ -106,7 +150,7 @@
 
     - name: Check application health
       ansible.builtin.uri:
-        url: http://127.0.0.1/admin/health
+        url: http://127.0.0.1/health
         method: GET
         status_code: 200
       register: app_health
@@ -114,3 +158,67 @@
       delay: 5
       until: app_health.status == 200
       when: deploy_application | default(false) | bool
+
+    - name: Wait for Grafana health
+      ansible.builtin.uri:
+        url: http://127.0.0.1/grafana/api/health
+        method: GET
+        status_code: 200
+      register: grafana_health
+      retries: 12
+      delay: 5
+      until: grafana_health.status == 200
+      when: deploy_application | default(false) | bool
+
+    - name: Wait for Kibana health
+      ansible.builtin.uri:
+        url: http://127.0.0.1/kibana/api/status
+        method: GET
+      register: kibana_health
+      retries: 8
+      delay: 5
+      until: kibana_health.status == 200
+      when: deploy_application | default(false) | bool
+
+    - name: Generate Kibana htpasswd file
+      ansible.builtin.command:
+        argv:
+          - htpasswd -cb /opt/ajs-suite/docker/nginx/.htpasswd ${KIBANA_USER} ${KIBANA_PASSWORD}
+      when: deploy_application | default(false) | bool
+      # Creates docker/nginx/.htpasswd for Kibana basic auth
+
+    - name: Deploy monitoring containers (Prometheus + Grafana)
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - -f /opt/ajs-suite/compose.yaml
+          - up
+          - -d
+          - --build
+      args:
+        chdir: "{{ app_deploy_dir }}"
+      when: deploy_application | default(false) | bool
+
+    - name: Wait for Prometheus health
+      ansible.builtin.uri:
+        url: http://127.0.0.1/prometheus/-/healthy
+        method: GET
+      register: prometheus_health
+      retries: 6
+      delay: 5
+      until: prometheus_health.status == 200
+      when: deploy_application | default(false) | bool
+
+    - name: Post-deploy summary
+      ansible.builtin.debug:
+        msg:
+          - "AJS Suite deployment complete"
+          - "Portfolio: http://${{ ansible_env.TF_PUBLIC_IP }}/"
+          - "Admin: http://${{ ansible_env.TF_PUBLIC_IP }}/admin/"
+          - "Grafana: http://${{ ansible_env.TF_PUBLIC_IP }}/grafana/"
+          - "Kibana: http://${{ ansible_env.TF_PUBLIC_IP }}/kibana/"
+          - "Health: http://${{ ansible_env.TF_PUBLIC_IP }}/health"
+          - "Prometheus: http://${{ ansible_env.TF_PUBLIC_IP }}/prometheus/"
+          - "Jira webhook: POST http://${{ ansible_env.TF_PUBLIC_IP }}/webhooks/jira"
+" using registered facts

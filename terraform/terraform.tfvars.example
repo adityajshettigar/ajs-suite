@@ -1,8 +1,89 @@
-project_name     = "ajs-suite"
-aws_region       = "ap-south-1"
-instance_type    = "t3.micro"
-key_name         = ""
-ssh_cidr         = "/32"
-root_volume_size = 12
+# AJS Suite Terraform Configuration - Example Variables
+# Copy this file to terraform.tfvars and fill in real values before running terraform apply.
+# Do NOT commit this file with real credentials.
+
+project_name      = "ajs-suite"
+aws_region        = "ap-south-1"
+# instance_type     = "t3.large"
+# Minimum for app + monitoring + ELK.
+# t3.medium (4 GB) works if ELK is dropped.
+
+# You must create an EC2 key pair in AWS Console and provide the name here.
+# This key pair will be used for SSH access to the instance.
+key_name          = "your-key-pair-name"
+
+# SSH CIDR: Restrict SSH access to your public IP only.
+# Find your public IP at: https://whatismyipaddress.com
+# Format: "203.0.113.10/32" — do NOT use "0.0.0.0/0" as it exposes SSH to the internet.
+ssh_cidr          = "YOUR_PUBLIC_IP_HERE/32"
+
+# Root volume size in GiB (between 8 and 30).
+root_volume_size  = 12
+
+# VPC and subnet CIDR ranges (usually leave as default unless you have specific requirements).
 vpc_cidr          = "10.20.0.0/16"
 public_subnet_cidr = "10.20.1.0/24"
+
+# OAuth and admin configuration — these are NOT Terraform variables;
+# they are set via the instance's .env file (rendered by Ansible).
+# Fill these in after the instance is running (see .env.example).
+
+# === PORT & NETWORK CONFIGURATION ===
+# The following ports must be open in the Security Group (managed by Terraform):
+#   22  - SSH (restricted to your IP via ssh_cidr)
+#   80  - HTTP / Portfolio access (open to internet)
+#
+# No 443 or 8086 — Cloudflare tunnel terminates TLS at the Cloudflare edge.
+# Traffic from cloudflared to nginx is plain HTTP on localhost.
+#
+# Optional: restrict tcp/80 to Cloudflare IP ranges only.
+# Set allow_cloudflare_only = false and populate var.allow_cloudflare_ip_v4
+# if you want to restrict port 80 to Cloudflare IPs.
+#
+# If allow_cloudflare_only = true (default): tcp/80 open to 0.0.0.0/0
+#   (Cloudflare IPs will be handled by the tunnel, not the SG).
+
+# === FIREWALL / SECURITY GROUP NOTES ===
+# Terraform security group 'aws_security_group.web' includes rules for ports 22 + 80 only.
+# Do NOT open port 22 to 0.0.0.0/0 — restrict to your SSH CIDR only.
+#
+# If allow_cloudflare_only is set to true: restrict tcp/80 to Cloudflare IP ranges.
+#   Get the latest list at: https://www.cloudflare.com/ips-v4
+#
+# If allow_cloudflare_only is false: tcp/80 open to 0.0.0.0/0.
+
+# === DOMAIN & HTTPS SETUP (REQUIRED for Google OAuth) ===
+# You MUST configure one of the following before OAuth will work:
+#
+# Option A: Cloudflare named tunnel (recommended)
+#   1. Buy/transfer a domain and point its Nameservers to Cloudflare.
+#   2. Create a Cloudflare named tunnel:
+#      - Public hostname: ajs-suite.<domain> -> service http://web:80
+#      - Copy the tunnel token.
+#   3. Set CLOUDFLARE_TUNNEL_TOKEN in .env.
+#   4. Set APP_BASE_URL=https://ajs-suite.<domain> in .env.
+#
+# Option B: Custom domain + Let's Encrypt (alternative)
+#   1. Register a domain via Cloudflare or Route 53.
+#   2. Point A record to the EC2 public IP.
+#   3. Install certbot on the EC2 and obtain SSL certificate.
+#   4. Set APP_BASE_URL=https://your-domain.com in .env.
+#
+# Google OAuth requires HTTPS redirect URIs. Without it, the callback will fail.
+#
+# Recommended: Use Cloudflare Tunnel (Option A) — free, no cert renewal needed.
+
+# === TERRAFORM STATE & Remote Backend ===
+# For production, consider configuring a remote backend (S3 + DynamoDB):
+# terraform {
+#   backend "s3" {
+#     bucket = "tf-state-bucket"
+#     key    = "ajs-suite/terraform.tfstate"
+#     region = "ap-south-1"
+#     dynamodb_table = "tf-locks"
+#   }
+#}
+
+# OAuth and admin configuration — these are NOT Terraform variables;
+# they are set via the instance's .env file (rendered by Ansible).
+# Fill these in after the instance is running (see .env.example).
