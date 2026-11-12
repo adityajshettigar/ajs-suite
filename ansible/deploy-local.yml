@@ -1,0 +1,55 @@
+---
+- name: Deploy AJS Suite locally (Ansible demo)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    project_dir: "{{ playbook_dir | dirname }}"
+    app_base_url: "http://localhost"
+    domain: "localhost"
+    admin_emails: "adityajs179@gmail.com"
+    secret_key: "{{ lookup('pipe', 'python3 -c \"import secrets;print(secrets.token_hex(32))\"') }}"
+
+  tasks:
+    - name: Assert required vars are non-empty
+      ansible.builtin.assert:
+        that:
+          - app_base_url | length > 0
+          - domain | length > 0
+          - admin_emails | length > 0
+        fail_msg: "Missing required variable"
+
+    - name: Render .env from Jinja2 template
+      ansible.builtin.template:
+        src: templates/env-local.j2
+        dest: "{{ project_dir }}/.env"
+        mode: "0600"
+      register: env_render
+
+    - name: Ensure 'ajs' Docker network exists
+      ansible.builtin.shell: docker network create ajs 2>/dev/null || true
+      changed_when: false
+
+    - name: Bring up admin + web via docker compose
+      ansible.builtin.shell: |
+        cd {{ project_dir }} && docker compose up -d admin web
+      register: compose_up
+      changed_when: "'Started' in compose_up.stdout or 'Recreated' in compose_up.stdout"
+
+    - name: Wait for /health to return 200
+      ansible.builtin.uri:
+        url: http://localhost/health
+        status_code: 200
+      register: health
+      retries: 20
+      delay: 3
+      until: health.status == 200
+
+    - name: Print deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "Portfolio:  http://localhost/"
+          - "Health:     http://localhost/health"
+          - "Admin:      http://localhost/admin/"
+          - "Rendered .env: {{ project_dir }}/.env"

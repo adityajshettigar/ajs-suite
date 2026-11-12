@@ -104,7 +104,7 @@
         - deploy_application | default(false) | bool
         - secret_key == "REPLACE_WITH_AT_LEAST_32_RANDOM_BYTES"
 
-    - name: Pre-flight assertion: check all required secrets are set
+    - name: "Pre-flight assertion: check all required secrets are set"
       ansible.builtin.assert:
         that:
           - cloudflare_tunnel_token is not none and cloudflare_tunnel_token != "REPLACE_WITH_TUNNEL_TOKEN"
@@ -221,4 +221,3 @@
           - "Health: http://${{ ansible_env.TF_PUBLIC_IP }}/health"
           - "Prometheus: http://${{ ansible_env.TF_PUBLIC_IP }}/prometheus/"
           - "Jira webhook: POST http://${{ ansible_env.TF_PUBLIC_IP }}/webhooks/jira"
-" using registered facts

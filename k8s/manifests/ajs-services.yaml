@@ -1,0 +1,65 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"admin","namespace":"default"},"spec":{"ports":[{"port":8001,"targetPort":8001}],"selector":{"app":"ajs-admin"}}}
+    creationTimestamp: "2026-11-05T10:15:52Z"
+    name: admin
+    namespace: default
+    resourceVersion: "790"
+    uid: 995560d2-30f4-4029-91cd-9bb4a163ea66
+  spec:
+    clusterIP: 10.96.54.135
+    clusterIPs:
+    - 10.96.54.135
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 8001
+      protocol: TCP
+      targetPort: 8001
+    selector:
+      app: ajs-admin
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"web","namespace":"default"},"spec":{"ports":[{"nodePort":30080,"port":80,"targetPort":80}],"selector":{"app":"ajs-web"},"type":"NodePort"}}
+    creationTimestamp: "2026-11-05T10:15:52Z"
+    name: web
+    namespace: default
+    resourceVersion: "810"
+    uid: f13f301f-37b5-473d-932d-a21e3a41be1b
+  spec:
+    clusterIP: 10.98.152.144
+    clusterIPs:
+    - 10.98.152.144
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - nodePort: 30080
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: ajs-web
+    sessionAffinity: None
+    type: NodePort
+  status:
+    loadBalancer: {}
+kind: List
+metadata:
+  resourceVersion: ""

@@ -9,3 +9,9 @@ venv/
 .coverage
 instance/
 sessions/
+
+# Local-only docker override (exposes Kibana on localhost for demo)
+compose.override.yaml
+.env
+.env.backup.*
+.env.local-before-ansible-demo
