@@ -38,6 +38,7 @@ if not ADMIN_EMAILS:
 SESSION_DIR.mkdir(parents=True, exist_ok=True)
 
 app = Flask(__name__)
+CSRFProtect(app)
 app.wsgi_app = ProxyFix(app.wsgi_app,
                         x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.config.update(
@@ -52,7 +53,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=IS_PRODUCTION,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_REFRESH_EACH_REQUEST=True,
-    WTF_CSRF_TIME_LIMIT=timedelta(hours=2),
+    WTF_CSRF_TIME_LIMIT=7200,
     MAX_CONTENT_LENGTH=1024 * 1024,
 )
 
@@ -62,9 +63,11 @@ def record_metrics_start():
 
 @app.after_request
 def record_metrics_end(response):
-    duration = time.time() - g.request_start
-    REQ_COUNT.labels(method=request.method, endpoint=request.path, status=response.status_code).inc()
-    REQ_DURATION.labels(endpoint=request.path).observe(duration)
+    start = getattr(g, "request_start", None)
+    if start is not None:
+        duration = time.time() - start
+        REQ_COUNT.labels(method=request.method, endpoint=request.path, status=response.status_code).inc()
+        REQ_DURATION.labels(endpoint=request.path).observe(duration)
     return response
 
 limiter = Limiter(
